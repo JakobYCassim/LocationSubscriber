@@ -37,10 +37,13 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    packagingOptions { resources.excludes.add("META-INF/*") }
 }
 
 dependencies {
-
+    implementation(libs.gson)
+    implementation(libs.hivemq.mqtt.client)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

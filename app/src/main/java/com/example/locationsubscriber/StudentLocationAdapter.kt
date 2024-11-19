@@ -23,7 +23,8 @@ class StudentLocationAdapter(private val studentLocations: List<StudentLocation>
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val student = studentLocations[position]
         holder.studentId.text = student.studentId
-        holder.location.text = "Lat: ${student.latitude}, Long: ${student.longitude}"
+        val time = student.formatTimestamp()
+        holder.location.text = "Lat: ${student.latitude}, Long: ${student.longitude}, Time: $time"
     }
 
     override fun getItemCount(): Int {
