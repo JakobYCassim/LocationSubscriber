@@ -98,6 +98,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         try {
             val studentLocation = Gson().fromJson(message, StudentLocation::class.java)
             val location = LatLng(studentLocation.latitude, studentLocation.longitude)
+            val databaseHelper = LocationDatabaseHelper(this)
+            databaseHelper.insertLocation(studentLocation)
             runOnUiThread {
                 studentLocations.add(studentLocation)
                 adapter.notifyItemInserted(studentLocations.size - 1)
@@ -144,5 +146,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val bounds = LatLngBounds.builder()
         latLngPoints.forEach { bounds.include(it)}
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 100))
+    }
+
+    private fun getLocationsForStudent(studentId: String) {
+        val databaseHelper = LocationDatabaseHelper(this)
+        val locations = databaseHelper.getLocationsForStudent(studentId)
+
+        locations.forEach {
+            Log.d("StudentLocations", "StudentId: ${it.student_id}, " +
+                    "Lat: ${it.latitude}," +
+                    "Long: ${it.longitude}," +
+                    "Time: ${it.formatTimestamp()}"
+            )
+        }
     }
 }
