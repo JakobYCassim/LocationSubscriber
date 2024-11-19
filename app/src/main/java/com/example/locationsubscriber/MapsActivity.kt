@@ -3,6 +3,8 @@ package com.example.locationsubscriber
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -19,12 +21,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
     private val pointsList = mutableListOf<MarkerPoints>()
+    private lateinit var adapter: StudentLocationAdapter
+    private val studentLocations = mutableListOf<StudentLocation>()
+    private lateinit var recyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_maps)
 
-        binding = ActivityMapsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        recyclerView = findViewById(R.id.rvStudent_List)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        adapter = StudentLocationAdapter(studentLocations)
+        recyclerView.adapter = adapter
+
+        studentLocations.add(StudentLocation("12345", 37.7749, -122.4194))
+        studentLocations.add(StudentLocation("67890", 40.7128, -74.0060))
+        adapter.notifyDataSetChanged()
+
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
