@@ -12,6 +12,7 @@ class StudentLocationAdapter(private val studentLocations: List<StudentLocation>
         class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val studentId: TextView = itemView.findViewById(R.id.studentId)
             val location: TextView = itemView.findViewById(R.id.Location)
+            val timestamp: TextView = itemView.findViewById(R.id.timestamp)
         }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -22,9 +23,10 @@ class StudentLocationAdapter(private val studentLocations: List<StudentLocation>
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val student = studentLocations[position]
-        holder.studentId.text = student.studentId
+        holder.studentId.text = student.student_id
         val time = student.formatTimestamp()
-        holder.location.text = "Lat: ${student.latitude}, Long: ${student.longitude}, Time: $time"
+        holder.location.text = "Lat: ${student.latitude}, Long: ${student.longitude}"
+        holder.timestamp.text = "Time: $time"
     }
 
     override fun getItemCount(): Int {

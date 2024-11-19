@@ -21,4 +21,12 @@
         android:text="Location: 0.0, Longitude: 0.0"
         android:textColor="@android:color/darker_gray"
     />
+
+    <TextView
+        android:id="@+id/timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Time: "
+        android:textColor="@android:color/darker_gray"
+    />
 </LinearLayout>

@@ -5,7 +5,7 @@ import java.util.Date
 import java.util.Locale
 
 data class StudentLocation(
-    val studentId: String,
+    val student_id: String,
     val latitude: Double,
     val longitude: Double,
     val timestamp: Long
