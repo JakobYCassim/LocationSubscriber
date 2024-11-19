@@ -14,19 +14,17 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.example.locationsubscriber.databinding.ActivityMapsBinding
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.gson.Gson
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
-import java.nio.charset.StandardCharsets
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-    private lateinit var binding: ActivityMapsBinding
     private val pointsList = mutableListOf<MarkerPoints>()
     private lateinit var adapter: StudentLocationAdapter
     private val studentLocations = mutableListOf<StudentLocation>()
@@ -73,6 +71,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
     }
 
+    @Suppress("SameParameterValue")
     private fun subscribeToTopic(topic: String) {
         mqttClient.subscribeWith()
             .topicFilter(topic)
@@ -84,11 +83,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .send()
             .whenComplete { _, throwable ->
                 if(throwable != null) {
-                    runOnUiThread { 
+                    runOnUiThread {
                         Toast.makeText(this, "Failed to subscribe to topic", Toast.LENGTH_SHORT).show()
                     }
                 }else {
-                    runOnUiThread { 
+                    runOnUiThread {
                         Toast.makeText(this, "Subscribed to topic: $topic", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -98,25 +97,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun handleInformation(message: String) {
         try {
             val studentLocation = Gson().fromJson(message, StudentLocation::class.java)
-
+            val location = LatLng(studentLocation.latitude, studentLocation.longitude)
             runOnUiThread {
                 studentLocations.add(studentLocation)
                 adapter.notifyItemInserted(studentLocations.size - 1)
+                addMarkerAtLocation(location)
             }
         } catch (e: Exception) {
             Log.e("handleInformation", "Error parsing message: $message", e)
         }
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
