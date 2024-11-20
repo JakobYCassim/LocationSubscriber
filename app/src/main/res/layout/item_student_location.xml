@@ -1,32 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android ="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width ="match_parent"
+    android:layout_height ="wrap_content"
     android:padding="8dp">
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/studentSummaryBtn"
+        android:layout_marginEnd="8dp"
+        >
 
-    <TextView
-        android:id="@+id/studentId"
+        <TextView
+            android:id="@+id/studentId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Student Id"
+            android:textStyle="bold"
+            android:textSize="16sp"
+        />
+
+        <TextView
+            android:id="@+id/Location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Location: 0.0, Longitude: 0.0"
+            android:textSize="14sp"
+            android:textColor="@android:color/darker_gray"
+        />
+
+        <TextView
+            android:id="@+id/timestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Time: "
+            android:textSize="14sp"
+            android:textColor="@android:color/darker_gray"
+        />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/studentSummaryBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Student Id"
-        android:textStyle="bold"
+        android:text="View More"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
     />
 
-    <TextView
-        android:id="@+id/Location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Location: 0.0, Longitude: 0.0"
-        android:textColor="@android:color/darker_gray"
-    />
-
-    <TextView
-        android:id="@+id/timestamp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Time: "
-        android:textColor="@android:color/darker_gray"
-    />
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

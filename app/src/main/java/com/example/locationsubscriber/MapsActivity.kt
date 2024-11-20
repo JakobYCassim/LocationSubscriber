@@ -1,12 +1,14 @@
 package com.example.locationsubscriber
 
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+ import androidx.recyclerview.widget.RecyclerView
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -15,6 +17,8 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.gson.Gson
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
@@ -25,11 +29,12 @@ import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-    private val pointsList = mutableListOf<MarkerPoints>()
+    private val pointsMap = mutableMapOf<String, MutableList<Marker>>()
     private lateinit var adapter: StudentLocationAdapter
     private val studentLocations = mutableListOf<StudentLocation>()
     private lateinit var recyclerView: RecyclerView
     private lateinit var mqttClient: Mqtt5AsyncClient
+    private val polylinesMap = mutableMapOf<String, Polyline>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,11 +42,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         recyclerView = findViewById(R.id.rvStudent_List)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = StudentLocationAdapter(studentLocations)
+        adapter = StudentLocationAdapter(studentLocations) {studentId ->
+
+            val intent = Intent(this, SummaryActivity::class.java).apply {
+                putExtra("studentId", studentId)
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+        }
         recyclerView.adapter = adapter
 
         connectToBroker()
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
@@ -101,63 +112,86 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             val databaseHelper = LocationDatabaseHelper(this)
             databaseHelper.insertLocation(studentLocation)
             runOnUiThread {
-                studentLocations.add(studentLocation)
-                adapter.notifyItemInserted(studentLocations.size - 1)
-                addMarkerAtLocation(location)
+                updateData(studentLocation)
+                addMarkerAtLocation(studentLocation.student_id, location)
             }
         } catch (e: Exception) {
             Log.e("handleInformation", "Error parsing message: $message", e)
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
+    private fun populateRecyclerView() {
+        studentLocations.clear()
+        val dbHelper = LocationDatabaseHelper(this)
+        studentLocations.addAll(dbHelper.getMostRecentLocations())
+        adapter.notifyDataSetChanged()
+    }
+
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.clear()
+        populateRecyclerView()
+        populateMap()
 
-        mMap.setOnMapClickListener { latLng ->
-            addMarkerAtLocation(latLng)
-            drawPolyline()
+    }
+
+    private fun populateMap() {
+        for(location in studentLocations) {
+            addMarkerAtLocation(location.student_id, LatLng(location.latitude, location.longitude))
         }
     }
 
-    private fun addMarkerAtLocation(latLng: LatLng) {
-        val newCustomPoint = MarkerPoints(pointsList.size + 1, latLng)
-
-        pointsList.add(newCustomPoint)
-
-        mMap.addMarker(
+    private fun addMarkerAtLocation(studentId: String, newLocation: LatLng) {
+        if(!pointsMap.containsKey(studentId)) {
+            pointsMap[studentId] = mutableListOf()
+        }
+        val marker = mMap.addMarker(
             MarkerOptions()
-                .position(latLng)
-                .title("Marker ${newCustomPoint.id}")
+                .position(newLocation)
+                .title("Marker $studentId")
+                .snippet("Lat: ${newLocation.latitude}, Lng: ${newLocation.longitude}")
         )
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10f))
+
+        marker?.let { pointsMap[studentId]?.add(it) }
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newLocation, 10f))
+        drawPolyline(studentId, newLocation)
     }
 
-    private fun drawPolyline() {
-        val latLngPoints = pointsList.map { it.point }
 
-        val polylineOptions = PolylineOptions()
-            .addAll(latLngPoints)
-            .color(Color.BLUE)
-            .width(5f)
-            .geodesic(true)
+    private fun drawPolyline(studentId: String, newLocation: LatLng) {
+        val existingPolyline = polylinesMap[studentId]
+        if(existingPolyline != null) {
+            val points = existingPolyline.points
+            points.add(newLocation)
+            existingPolyline.points = points
+        }else {
 
-        mMap.addPolyline(polylineOptions)
+            val polylineOptions = PolylineOptions()
+                .add(newLocation)
+                .color(Color.BLUE)
+                .width(5f)
+                .geodesic(true)
 
+            val polyline = mMap.addPolyline(polylineOptions)
+            polylinesMap[studentId] = polyline
+        }
         val bounds = LatLngBounds.builder()
-        latLngPoints.forEach { bounds.include(it)}
+        val points = polylinesMap[studentId]?.points ?: listOf()
+        points.forEach { bounds.include(it) }
+        bounds.include(newLocation)
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 100))
     }
 
-    private fun getLocationsForStudent(studentId: String) {
-        val databaseHelper = LocationDatabaseHelper(this)
-        val locations = databaseHelper.getLocationsForStudent(studentId)
-
-        locations.forEach {
-            Log.d("StudentLocations", "StudentId: ${it.student_id}, " +
-                    "Lat: ${it.latitude}," +
-                    "Long: ${it.longitude}," +
-                    "Time: ${it.formatTimestamp()}"
-            )
+    fun updateData(studentLocation: StudentLocation) {
+        val existingStudentIndex = studentLocations.indexOfFirst {it.student_id == studentLocation.student_id}
+        if(existingStudentIndex != -1) {
+            studentLocations[existingStudentIndex] = studentLocation
+            adapter.notifyItemChanged(existingStudentIndex)
+        }else {
+            studentLocations.add(studentLocation)
+            adapter.notifyItemInserted(studentLocations.size - 1)
         }
     }
+
 }

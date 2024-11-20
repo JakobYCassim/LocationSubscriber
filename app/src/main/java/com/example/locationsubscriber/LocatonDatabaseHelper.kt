@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
 
+
 class LocationDatabaseHelper(context: Context):
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION )
 {
@@ -79,6 +80,33 @@ class LocationDatabaseHelper(context: Context):
         cursor.close()
         db.close()
         return locationList
+    }
+
+    fun getMostRecentLocations(): List<StudentLocation> {
+        val studentLocations = mutableListOf<StudentLocation>()
+        val query = """
+            SELECT $COLUMN_STUDENT_ID,
+            $COLUMN_LATITUDE,
+            $COLUMN_LONGITUDE,
+            MAX($COLUMN_TIMESTAMP) AS latest_timestamp
+            FROM $TABLE_NAME
+            GROUP BY $COLUMN_STUDENT_ID
+        """
+
+        val db = readableDatabase
+        val cursor = db.rawQuery(query, null)
+
+        while (cursor.moveToNext()) {
+            val studentId = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_STUDENT_ID))
+            val latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LATITUDE))
+            val longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LONGITUDE))
+            val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("latest_timestamp"))
+
+            studentLocations.add(StudentLocation(studentId, latitude, longitude, timestamp))
+        }
+        cursor.close()
+
+        return studentLocations
     }
 
 }
