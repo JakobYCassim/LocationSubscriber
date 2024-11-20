@@ -8,7 +8,7 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -22,26 +22,31 @@
             android:layout_height="wrap_content"
             android:text="Student Id"
             android:textStyle="bold"
-            android:textSize="16sp"
+            android:textSize="24sp"
+            android:padding="8dp"
         />
-
-        <TextView
-            android:id="@+id/Location"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Location: 0.0, Longitude: 0.0"
-            android:textSize="14sp"
-            android:textColor="@android:color/darker_gray"
-        />
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/minSpeedText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Min Speed: 0.0m/s"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray"
+            />
 
-        <TextView
-            android:id="@+id/timestamp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Time: "
-            android:textSize="14sp"
-            android:textColor="@android:color/darker_gray"
-        />
+            <TextView
+                android:id="@+id/maxSpeedText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Max Speed: 0.0m/s "
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray"
+            />
+        </LinearLayout>
     </LinearLayout>
 
     <Button

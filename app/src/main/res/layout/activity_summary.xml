@@ -4,21 +4,48 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+    <TextView
+        android:id="@+id/sumText"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:text="Summary of ... from ... to ...."
+        android:textSize="24dp"
+        android:textStyle="bold"
+    />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/Smap"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_weight="1"
+        android:layout_weight="2"
     />
 
     <TextView
+        android:id="@+id/maxSpeedSum"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:text="Speed Details"
+        android:layout_weight="0.5"
+        android:text="Max Speed: "
     />
+
+    <TextView
+        android:id="@+id/minSpeedSum"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:text="Min Speed: "
+    />
+
+    <TextView
+        android:id="@+id/avgSpeedSum"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:text="Average Speed: "
+    />
+
 
     <Button
         android:id="@+id/btn_return"

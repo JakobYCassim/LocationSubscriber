@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.locationsubscriber.ColorUtils.getUniqueColorForStudent
+import com.example.locationsubscriber.LocationUtils.calculateSpeed
+import com.example.locationsubscriber.LocationUtils.convertToStudentLocation
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -105,30 +107,68 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
     }
 
+    private val previousLocations = mutableMapOf<String, StudentLocation>()
     private fun handleInformation(message: String) {
         try {
-            val studentLocation = Gson().fromJson(message, StudentLocation::class.java)
-            val location = LatLng(studentLocation.latitude, studentLocation.longitude)
+            val incomingLocation = Gson().fromJson(message, IncomingMessage::class.java)
+            val location = LatLng(incomingLocation.latitude, incomingLocation.longitude)
+            val studentLocation = convertToStudentLocation(incomingLocation)
             val databaseHelper = LocationDatabaseHelper(this)
+            studentLocation.speed = speedCalc(studentLocation)
             databaseHelper.insertLocation(studentLocation)
             runOnUiThread {
                 updateData(studentLocation)
                 addMarkerAtLocation(studentLocation.student_id, location)
             }
+            previousLocations[studentLocation.student_id] = studentLocation
         } catch (e: Exception) {
             Log.e("handleInformation", "Error parsing message: $message", e)
         }
     }
 
+    private fun speedCalc(studentLocation: StudentLocation): Double {
+        val previousLocation = previousLocations[studentLocation.student_id]
+        var speed = 0.0
+        if(previousLocation != null) {
+
+            speed = calculateSpeed(
+                previousLocation.latitude,
+                previousLocation.longitude,
+                previousLocation.timestamp,
+                studentLocation.latitude,
+                studentLocation.longitude,
+                studentLocation.timestamp
+            )
+
+            if (speed < previousLocation.minSpeed) studentLocation.minSpeed = speed
+            if (speed > previousLocation.maxSpeed) studentLocation.maxSpeed = speed
+        }
+
+        return speed
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     private fun populateRecyclerView() {
+        Log.d("MapsActivity", "PopulateRecyclerView called")
         studentLocations.clear()
+        Log.d("MapsActivity", "studentLocations cleared")
         val dbHelper = LocationDatabaseHelper(this)
-        studentLocations.addAll(dbHelper.getMostRecentLocations())
+        Log.d("MapsActivity", "dbHelper created called")
+        try {
+            studentLocations.addAll(dbHelper.getMostRecentLocations())
+            Log.d("MapsActivity", "Locations added from db")
+        } catch(e: Exception) {Log.e("Database", "${e.message}")}
+        studentLocations.forEach {
+            it.minSpeed = dbHelper.getMinSpeedForStudent(it.student_id)
+            it.maxSpeed = dbHelper.getMaxSpeedForStudent(it.student_id)
+            previousLocations[it.student_id] = it
+        }
+        Log.d("MapsActivity", "Adapter being notified")
         adapter.notifyDataSetChanged()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
+        Log.d("MapsActivity", "onMapReady called")
         mMap = googleMap
         mMap.clear()
         populateRecyclerView()
@@ -137,6 +177,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun populateMap() {
+        Log.d("MapsActivity", "PopulateMap called")
         for(location in studentLocations) {
             addMarkerAtLocation(location.student_id, LatLng(location.latitude, location.longitude))
         }

@@ -1,12 +1,15 @@
 package com.example.locationsubscriber
 
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.locationsubscriber.ColorUtils.getUniqueColorForStudent
+import com.example.locationsubscriber.LocationUtils.formatTimestamp
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -21,7 +24,8 @@ class SummaryActivity: AppCompatActivity(), OnMapReadyCallback {
     private lateinit var map: GoogleMap
     private var studentId: String? = null
     private val pointsList = mutableListOf<MarkerPoints>()
-
+    private lateinit var dbHelper: LocationDatabaseHelper
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_summary)
@@ -33,7 +37,11 @@ class SummaryActivity: AppCompatActivity(), OnMapReadyCallback {
             return
         }
 
-
+        val titleText: TextView = findViewById(R.id.sumText)
+        dbHelper = LocationDatabaseHelper(this)
+        val startDate = formatTimestamp(dbHelper.getEarliestDateForStudent(studentId!!))
+        val endDate = formatTimestamp(dbHelper.getLatestDateForStudent(studentId!!))
+        titleText.text = "Summary of $studentId, Start Date: $startDate, End Date: $endDate"
         val mapFragment = supportFragmentManager.findFragmentById(R.id.Smap) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
@@ -43,6 +51,8 @@ class SummaryActivity: AppCompatActivity(), OnMapReadyCallback {
         returnButton.setOnClickListener {
             finish()
         }
+
+
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -56,7 +66,6 @@ class SummaryActivity: AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun loadStudentLocations() {
-        val dbHelper =  LocationDatabaseHelper(this)
         val locations = dbHelper.getLocationsForStudent(studentId!!)
         for (location in locations) {
             val latLng = LatLng(location.latitude, location.longitude)
@@ -66,10 +75,17 @@ class SummaryActivity: AppCompatActivity(), OnMapReadyCallback {
     }
 
 
+    @SuppressLint("SetTextI18n")
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         map.clear()
-       loadStudentLocations()
+        loadStudentLocations()
+        val minSpeedText: TextView = findViewById(R.id.minSpeedSum)
+        val maxSpeedText: TextView = findViewById(R.id.maxSpeedSum)
+        val avgSpeedText: TextView = findViewById(R.id.avgSpeedSum)
+        minSpeedText.text = "Min Speed: ${dbHelper.getMinSpeedForStudent(studentId!!)}"
+        maxSpeedText.text = "Max Speed: ${dbHelper.getMaxSpeedForStudent(studentId!!)}"
+        avgSpeedText.text = "Average Speed: ${dbHelper.getAverageSpeedForStudent(studentId!!)}"
     }
 
 
