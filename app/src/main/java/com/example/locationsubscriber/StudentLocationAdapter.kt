@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.locationsubscriber.ColorUtils.getUniqueColorForStudent
 
 class StudentLocationAdapter(
     private var studentLocations: MutableList<StudentLocation>,
@@ -33,7 +34,8 @@ class StudentLocationAdapter(
         val time = student.formatTimestamp()
         holder.location.text = "Lat: ${student.latitude}, Long: ${student.longitude}"
         holder.timestamp.text = "Time: $time"
-
+        val color = getUniqueColorForStudent(student.student_id)
+        holder.studentId.setTextColor(color)
         holder.viewStudentSummary.setOnClickListener {
             onStudentClick(student.student_id)
         }

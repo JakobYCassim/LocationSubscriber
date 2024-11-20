@@ -2,13 +2,13 @@ package com.example.locationsubscriber
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
  import androidx.recyclerview.widget.RecyclerView
+import com.example.locationsubscriber.ColorUtils.getUniqueColorForStudent
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -35,6 +35,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var recyclerView: RecyclerView
     private lateinit var mqttClient: Mqtt5AsyncClient
     private val polylinesMap = mutableMapOf<String, Polyline>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -160,6 +161,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
     private fun drawPolyline(studentId: String, newLocation: LatLng) {
+
+        val studentColor = getUniqueColorForStudent(studentId)
         val existingPolyline = polylinesMap[studentId]
         if(existingPolyline != null) {
             val points = existingPolyline.points
@@ -169,7 +172,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
             val polylineOptions = PolylineOptions()
                 .add(newLocation)
-                .color(Color.BLUE)
+                .color(studentColor)
                 .width(5f)
                 .geodesic(true)
 
@@ -183,7 +186,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 100))
     }
 
-    fun updateData(studentLocation: StudentLocation) {
+    private fun updateData(studentLocation: StudentLocation) {
         val existingStudentIndex = studentLocations.indexOfFirst {it.student_id == studentLocation.student_id}
         if(existingStudentIndex != -1) {
             studentLocations[existingStudentIndex] = studentLocation
@@ -193,5 +196,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             adapter.notifyItemInserted(studentLocations.size - 1)
         }
     }
+
+
+
 
 }

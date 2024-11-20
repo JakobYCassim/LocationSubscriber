@@ -5,7 +5,7 @@ package com.example.locationsubscriber
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-
+import android.util.Log
 
 
 class LocationDatabaseHelper(context: Context):
@@ -95,14 +95,17 @@ class LocationDatabaseHelper(context: Context):
 
         val db = readableDatabase
         val cursor = db.rawQuery(query, null)
+        if(cursor.moveToFirst()) {
+            while (cursor.moveToNext()) {
+                val studentId = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_STUDENT_ID))
+                val latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LATITUDE))
+                val longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LONGITUDE))
+                val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("latest_timestamp"))
 
-        while (cursor.moveToNext()) {
-            val studentId = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_STUDENT_ID))
-            val latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LATITUDE))
-            val longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LONGITUDE))
-            val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("latest_timestamp"))
-
-            studentLocations.add(StudentLocation(studentId, latitude, longitude, timestamp))
+                studentLocations.add(StudentLocation(studentId, latitude, longitude, timestamp))
+            }
+        }else {
+            Log.e("Database", "No location data found")
         }
         cursor.close()
 

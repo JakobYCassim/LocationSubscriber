@@ -1,11 +1,12 @@
 package com.example.locationsubscriber
 
-import android.graphics.Color
+
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.example.locationsubscriber.ColorUtils.getUniqueColorForStudent
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -87,10 +88,10 @@ class SummaryActivity: AppCompatActivity(), OnMapReadyCallback {
 
     private fun drawPolyline() {
         val latLngPoints = pointsList.map { it.point }
-
+        val color = studentId?.let { getUniqueColorForStudent(it) }
         val polylineOptions = PolylineOptions()
             .addAll(latLngPoints)
-            .color(Color.BLUE)
+            .color(color!!)
             .width(5f)
             .geodesic(true)
 
