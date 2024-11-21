@@ -7,6 +7,27 @@
     android:orientation="vertical"
     tools:context=".MapsActivity" >
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.3"
+        android:text="Assignment 2 - Subscriber"
+        android:textSize="24sp"
+        android:padding = "16dp"
+        android:gravity="center"
+        android:textStyle="bold"
+    />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.2"
+        android:text="Live View"
+        android:textSize="20sp"
+        android:padding = "8dp"
+        />
+
+
     <androidx.fragment.app.FragmentContainerView
 
         android:id="@+id/map"
