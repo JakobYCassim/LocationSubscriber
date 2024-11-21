@@ -3,16 +3,44 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="16dp">
     <TextView
         android:id="@+id/sumText"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.5"
-        android:text="Summary of ... from ... to ...."
-        android:textSize="24dp"
+        android:text="Summary of ... "
+        android:textSize="18sp"
         android:textStyle="bold"
+        android:gravity="center"
+        android:paddingBottom="8dp"
     />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="16dp">
+
+        <EditText
+            android:id="@+id/startDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Start Date"
+            android:inputType="date" />
+
+        <EditText
+            android:id="@+id/endDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="End Date"
+            android:inputType="date"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/Smap"

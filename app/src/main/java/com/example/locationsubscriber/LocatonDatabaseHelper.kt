@@ -6,6 +6,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import com.google.android.gms.maps.model.LatLng
 
 
 class LocationDatabaseHelper(context: Context):
@@ -219,5 +220,78 @@ class LocationDatabaseHelper(context: Context):
         cursor.close()
         return averageSpeed
     }
+
+    fun getLocationsWithinDateRange(studentId: String, startDate: Long, endDate: Long): List<StudentLocation> {
+        val db = readableDatabase
+        val locations = mutableListOf<StudentLocation>()
+        val cursor = db.rawQuery(
+            "SELECT $COLUMN_LATITUDE, $COLUMN_LONGITUDE, $COLUMN_TIMESTAMP, $COLUMN_SPEED FROM locations WHERE $COLUMN_STUDENT_ID =COLUMN_$COLUMN_TIMESTAMP BETWEEN ? AND ?",
+            arrayOf(studentId, startDate.toString(), endDate.toString())
+        )
+
+        if (cursor.moveToFirst()) {
+            do {
+                val latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LATITUDE))
+                val longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LONGITUDE))
+                val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
+                val speed = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SPEED))
+                locations.add(StudentLocation(studentId, latitude, longitude, timestamp, speed))
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return locations
+    }
+
+    fun getMaxSpeedForDateRange(studentId: String, startDate: Long, endDate: Long): Double {
+        val db = this.readableDatabase
+        val query = """
+        SELECT MAX($COLUMN_SPEED) 
+        FROM $TABLE_NAME 
+        WHERE $COLUMN_STUDENT_ID = ? AND $COLUMN_TIMESTAMP BETWEEN ? AND ?
+    """
+        val cursor = db.rawQuery(query, arrayOf(studentId, startDate.toString(), endDate.toString()))
+        var maxSpeed = 0.0
+        if (cursor.moveToFirst()) {
+            maxSpeed = cursor.getDouble(0)
+        }
+        cursor.close()
+        return maxSpeed
+    }
+
+    fun getMinSpeedForDateRange(studentId: String, startDate: Long, endDate: Long): Double {
+        val db = this.readableDatabase
+        val query = """
+        SELECT MIN($COLUMN_SPEED) 
+        FROM $TABLE_NAME 
+        WHERE $COLUMN_STUDENT_ID = ? AND $COLUMN_TIMESTAMP BETWEEN ? AND ?
+    """
+        val cursor = db.rawQuery(query, arrayOf(studentId, startDate.toString(), endDate.toString()))
+        var minSpeed = 0.0
+        if (cursor.moveToFirst()) {
+            minSpeed = cursor.getDouble(0)
+        }
+        cursor.close()
+        return minSpeed
+    }
+
+    fun getAverageSpeedForDateRange(studentId: String, startDate: Long, endDate: Long): Double {
+        val db = this.readableDatabase
+        val query = """
+        SELECT AVG($COLUMN_SPEED) 
+        FROM $TABLE_NAME 
+        WHERE $COLUMN_STUDENT_ID = ? AND $COLUMN_TIMESTAMP BETWEEN ? AND ?
+    """
+        val cursor = db.rawQuery(query, arrayOf(studentId, startDate.toString(), endDate.toString()))
+        var avgSpeed = 0.0
+        if (cursor.moveToFirst()) {
+            avgSpeed = cursor.getDouble(0)
+        }
+        cursor.close()
+        return avgSpeed
+    }
+
+
+
+
 
 }
