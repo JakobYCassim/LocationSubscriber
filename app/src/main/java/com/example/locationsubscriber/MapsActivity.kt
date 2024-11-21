@@ -3,6 +3,8 @@ package com.example.locationsubscriber
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -36,7 +38,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var recyclerView: RecyclerView
     private lateinit var mqttClient: Mqtt5AsyncClient
     private val polylinesMap = mutableMapOf<String, Polyline>()
-
+    private lateinit var dbHelper: LocationDatabaseHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +55,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             startActivity(intent)
         }
         recyclerView.adapter = adapter
-
+        dbHelper = LocationDatabaseHelper(this)
         connectToBroker()
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
@@ -113,11 +115,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             val incomingLocation = Gson().fromJson(message, IncomingMessage::class.java)
             val location = LatLng(incomingLocation.latitude, incomingLocation.longitude)
             val studentLocation = convertToStudentLocation(incomingLocation)
-            val databaseHelper = LocationDatabaseHelper(this)
             studentLocation.speed = speedCalc(studentLocation)
-            databaseHelper.insertLocation(studentLocation)
+            dbHelper.insertLocation(studentLocation)
             runOnUiThread {
-                updateData(studentLocation)
+                addNewData(studentLocation)
                 addMarkerAtLocation(studentLocation.student_id, location)
             }
             previousLocations[studentLocation.student_id] = studentLocation
@@ -148,14 +149,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    private fun populateRecyclerView() {
-        Log.d("MapsActivity", "PopulateRecyclerView called")
-        studentLocations.clear()
-        Log.d("MapsActivity", "studentLocations cleared")
-        val dbHelper = LocationDatabaseHelper(this)
-        Log.d("MapsActivity", "dbHelper created called")
+    private fun updateRecyclerView() {
+
         try {
-            studentLocations.addAll(dbHelper.getMostRecentLocations())
+            studentLocations.clear()
+            studentLocations.addAll(dbHelper.getRecentLocationsList())
             Log.d("MapsActivity", "Locations added from db")
         } catch(e: Exception) {Log.e("Database", "${e.message}")}
         studentLocations.forEach {
@@ -167,19 +165,47 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         adapter.notifyDataSetChanged()
     }
 
+    private fun updateRecentData() {
+
+        updateRecyclerView()
+
+        updateMap()
+    }
+
+    private val handler = Handler(Looper.getMainLooper())
+
+    private val refreshRunnable = object : Runnable {
+        override fun run() {
+            updateRecentData()
+            handler.postDelayed(this, 5000)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        handler.post(refreshRunnable)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        handler.removeCallbacks(refreshRunnable)
+    }
+
     override fun onMapReady(googleMap: GoogleMap) {
         Log.d("MapsActivity", "onMapReady called")
         mMap = googleMap
         mMap.clear()
-        populateRecyclerView()
-        populateMap()
+        updateRecyclerView()
+        updateMap()
 
     }
 
-    private fun populateMap() {
-        Log.d("MapsActivity", "PopulateMap called")
-        for(location in studentLocations) {
-            addMarkerAtLocation(location.student_id, LatLng(location.latitude, location.longitude))
+    private fun updateMap() {
+       val recentLocations = dbHelper.getRecentLocationsMap()
+
+        mMap.clear()
+        recentLocations.forEach {
+            addMarkerAtLocation(it.student_id, LatLng(it.latitude, it.longitude))
         }
     }
 
@@ -226,7 +252,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 100))
     }
 
-    private fun updateData(studentLocation: StudentLocation) {
+    private fun addNewData(studentLocation: StudentLocation) {
         val existingStudentIndex = studentLocations.indexOfFirst {it.student_id == studentLocation.student_id}
         if(existingStudentIndex != -1) {
             studentLocations[existingStudentIndex] = studentLocation

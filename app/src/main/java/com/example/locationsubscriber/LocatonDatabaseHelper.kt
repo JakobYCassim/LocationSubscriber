@@ -86,9 +86,12 @@ class LocationDatabaseHelper(context: Context):
         return locationList
     }
 
-    fun getMostRecentLocations(): List<StudentLocation> {
+    fun getRecentLocationsList(lastMinutes: Int= 5): List<StudentLocation> {
         Log.d("Database", "Query called")
         val studentLocations = mutableListOf<StudentLocation>()
+        val currentTime = System.currentTimeMillis()
+        val cutoffTime = currentTime - (lastMinutes * 60 * 1000)
+
         val query = """
             SELECT $COLUMN_STUDENT_ID,
             $COLUMN_LATITUDE,
@@ -96,11 +99,12 @@ class LocationDatabaseHelper(context: Context):
             MAX($COLUMN_TIMESTAMP) AS latest_timestamp,
             $COLUMN_SPEED
             FROM $TABLE_NAME
+            WHERE timestamp > ?
             GROUP BY $COLUMN_STUDENT_ID
         """
 
         val db = readableDatabase
-        val cursor = db.rawQuery(query, null)
+        val cursor = db.rawQuery(query, arrayOf(cutoffTime.toString()))
         Log.d("Database", "called query to create cursor")
         if(cursor.moveToFirst()) {
             Log.d("Database", "Cursor has first value")
@@ -121,6 +125,35 @@ class LocationDatabaseHelper(context: Context):
 
         return studentLocations
     }
+
+    fun getRecentLocationsMap(lastMinutes: Int = 5): List<StudentLocation> {
+        val db = this.readableDatabase
+        val recentLocations = mutableListOf<StudentLocation>()
+
+        val currentTime = System.currentTimeMillis()
+        val cutoffTime = currentTime - (lastMinutes * 60 * 1000) // Convert minutes to milliseconds
+
+        val query = """
+        SELECT * FROM $TABLE_NAME
+        WHERE timestamp > ?
+    """
+        val cursor = db.rawQuery(query, arrayOf(cutoffTime.toString()))
+
+        if (cursor.moveToFirst()) {
+            do {
+                val studentId = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_STUDENT_ID))
+                val latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LATITUDE))
+                val longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LONGITUDE))
+                val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
+                val speed = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_SPEED))
+
+                recentLocations.add(StudentLocation(studentId, latitude, longitude, timestamp, speed))
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return recentLocations
+    }
+
 
     fun getMaxSpeedForStudent(studentId: String): Double {
         val db = readableDatabase
