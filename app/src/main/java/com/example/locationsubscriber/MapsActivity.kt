@@ -17,10 +17,10 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.Circle
+import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.gson.Gson
@@ -32,7 +32,7 @@ import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-    private val pointsMap = mutableMapOf<String, MutableList<Marker>>()
+    private val pointsMap = mutableMapOf<String, MutableList<Circle>>()
     private lateinit var adapter: StudentLocationAdapter
     private val studentLocations = mutableListOf<StudentLocation>()
     private lateinit var recyclerView: RecyclerView
@@ -213,14 +213,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if(!pointsMap.containsKey(studentId)) {
             pointsMap[studentId] = mutableListOf()
         }
-        val marker = mMap.addMarker(
-            MarkerOptions()
-                .position(newLocation)
-                .title("Marker $studentId")
-                .snippet("Lat: ${newLocation.latitude}, Lng: ${newLocation.longitude}")
+        val marker = mMap.addCircle(
+            CircleOptions()
+                .center(newLocation)
+                .radius(1.0)
+                .fillColor(getUniqueColorForStudent(studentId))
+                .strokeColor(getUniqueColorForStudent(studentId))
+                .strokeWidth(1f)
         )
 
-        marker?.let { pointsMap[studentId]?.add(it) }
+        marker.let { pointsMap[studentId]?.add(it) }
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newLocation, 10f))
         drawPolyline(studentId, newLocation)
     }

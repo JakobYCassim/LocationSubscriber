@@ -14,9 +14,9 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 
 class SummaryActivity: AppCompatActivity(), OnMapReadyCallback {
@@ -89,15 +89,19 @@ class SummaryActivity: AppCompatActivity(), OnMapReadyCallback {
     }
 
 
+    @Suppress("UNUSED_VARIABLE")
     private fun addMarkerAtLocation(latLng: LatLng) {
         val newCustomPoint = MarkerPoints(pointsList.size + 1, latLng)
 
         pointsList.add(newCustomPoint)
 
-        map.addMarker(
-            MarkerOptions()
-                .position(latLng)
-                .title("Marker ${newCustomPoint.id}")
+        val marker = map.addCircle(
+            CircleOptions()
+                .center(latLng)
+                .radius(1.0)
+                .fillColor(getUniqueColorForStudent(studentId!!))
+                .strokeColor(getUniqueColorForStudent(studentId!!))
+                .strokeWidth(1f)
         )
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10f))
     }
